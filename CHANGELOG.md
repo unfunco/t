@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/unfunco/t/compare/v0.1.0...v0.1.1) (2025-11-04)
+
+
+### Bug fixes
+
+* Resolve issues when releasing binaries ([#6](https://github.com/unfunco/t/issues/6)) ([c47edde](https://github.com/unfunco/t/commit/c47edde253aae3b867597b3a30ccef47dbc7ac55))
+
 ## 0.1.0 (2025-11-04)
 
 
