@@ -9,6 +9,8 @@ import (
 	"github.com/MakeNowJust/heredoc/v2"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
+	"github.com/unfunco/t/internal/model"
+	"github.com/unfunco/t/internal/storage"
 	"github.com/unfunco/t/internal/tui"
 	"github.com/unfunco/t/internal/version"
 )
@@ -59,25 +61,80 @@ func NewTCommand(in io.Reader, out, errOut io.Writer) *cobra.Command {
 				return ErrAmbiguousDateFlags
 			}
 
+			store, err := storage.New()
+			if err != nil {
+				return fmt.Errorf("failed to initialize storage: %w", err)
+			}
+
 			// Launch the TUI if no title argument is provided.
 			if len(args) == 0 {
-				m := tui.New()
+				todayList, err := store.LoadTodayList()
+				if err != nil {
+					return fmt.Errorf("failed to load today list: %w", err)
+				}
+
+				tomorrowList, err := store.LoadTomorrowList()
+				if err != nil {
+					return fmt.Errorf("failed to load tomorrow list: %w", err)
+				}
+
+				todoList, err := store.LoadTodoList()
+				if err != nil {
+					return fmt.Errorf("failed to load todo list: %w", err)
+				}
+
+				m := tui.New(todayList, tomorrowList, todoList)
 				p := tea.NewProgram(&m)
 
-				model, err := p.Run()
+				tuiModel, err := p.Run()
 				if err != nil {
 					return fmt.Errorf("error running TUI: %w", err)
 				}
 
-				if tuiModel, ok := model.(*tui.Model); ok && tuiModel.WasSubmitted() {
-					// TODO(unfunco): Save to persistent storage.
-					return nil
+				if m, ok := tuiModel.(*tui.Model); ok && m.WasSubmitted() {
+					if err := store.SaveAll(m.GetTodayList(), m.GetTomorrowList(), m.GetTodosList()); err != nil {
+						return fmt.Errorf("failed to save changes: %w", err)
+					}
 				}
 
 				return nil
 			}
 
-			_, _ = fmt.Fprintf(out, "Adding todo: %s\n", args[0])
+			title := args[0]
+			todo := model.NewTodo(title, "")
+
+			var targetList *model.TodoList
+			if today {
+				targetList, err = store.LoadTodayList()
+				if err != nil {
+					return fmt.Errorf("failed to load today list: %w", err)
+				}
+				targetList.Todos = append(targetList.Todos, todo)
+				if err := store.SaveToday(targetList); err != nil {
+					return fmt.Errorf("failed to save today list: %w", err)
+				}
+				_, _ = fmt.Fprintf(out, "Added to Today: %s\n", title)
+			} else if tomorrow {
+				targetList, err = store.LoadTomorrowList()
+				if err != nil {
+					return fmt.Errorf("failed to load tomorrow list: %w", err)
+				}
+				targetList.Todos = append(targetList.Todos, todo)
+				if err := store.SaveTomorrow(targetList); err != nil {
+					return fmt.Errorf("failed to save tomorrow list: %w", err)
+				}
+				_, _ = fmt.Fprintf(out, "Added to Tomorrow: %s\n", title)
+			} else {
+				targetList, err = store.LoadTodoList()
+				if err != nil {
+					return fmt.Errorf("failed to load todo list: %w", err)
+				}
+				targetList.Todos = append(targetList.Todos, todo)
+				if err := store.SaveTodo(targetList); err != nil {
+					return fmt.Errorf("failed to save todo list: %w", err)
+				}
+				_, _ = fmt.Fprintf(out, "Added to Todos: %s\n", title)
+			}
 
 			return nil
 		},

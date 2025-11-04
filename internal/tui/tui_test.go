@@ -4,10 +4,32 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/unfunco/t/internal/model"
 )
 
+// newTestModel creates a new model for testing with sample data.
+func newTestModel() Model {
+	todayList := &model.TodoList{
+		Name: "Today",
+		Todos: []model.Todo{
+			model.NewTodo("Test todo 1", "Test description 1"),
+			model.NewTodo("Test todo 2", "Test description 2"),
+			model.NewTodo("Test todo 3", "Test description 3"),
+		},
+	}
+	tomorrowList := &model.TodoList{
+		Name:  "Tomorrow",
+		Todos: []model.Todo{model.NewTodo("Tomorrow task", "")},
+	}
+	todoList := &model.TodoList{
+		Name:  "Todos",
+		Todos: []model.Todo{model.NewTodo("General task", "")},
+	}
+	return New(todayList, tomorrowList, todoList)
+}
+
 func TestNew(t *testing.T) {
-	m := New()
+	m := newTestModel()
 
 	if m.activeTab != TabToday {
 		t.Errorf("Expected active tab to be Today, got %v", m.activeTab)
@@ -31,7 +53,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestTabNavigation(t *testing.T) {
-	m := New()
+	m := newTestModel()
 
 	// Test next tab
 	m.nextTab()
@@ -53,7 +75,7 @@ func TestTabNavigation(t *testing.T) {
 }
 
 func TestCursorMovement(t *testing.T) {
-	m := New()
+	m := newTestModel()
 
 	// Start at 0
 	if m.cursor != 0 {
@@ -80,7 +102,7 @@ func TestCursorMovement(t *testing.T) {
 }
 
 func TestToggleTodo(t *testing.T) {
-	m := New()
+	m := newTestModel()
 
 	// Get the first todo
 	todo := &m.todayList.Todos[0]
@@ -102,7 +124,7 @@ func TestToggleTodo(t *testing.T) {
 }
 
 func TestKeyboardInput(t *testing.T) {
-	m := New()
+	m := newTestModel()
 	ptr := &m
 
 	// Test right arrow
@@ -138,7 +160,7 @@ func TestKeyboardInput(t *testing.T) {
 }
 
 func TestView(t *testing.T) {
-	m := New()
+	m := newTestModel()
 
 	view := m.View()
 

@@ -110,36 +110,16 @@ type Model struct {
 	theme        theme.Theme
 }
 
-// New creates a new TUI model.
-func New() Model {
+// New creates a new TUI model with the provided todo lists.
+func New(todayList, tomorrowList, todoList *model.TodoList) Model {
 	return Model{
-		keys:      DefaultKeyMap(),
-		activeTab: TabToday,
-		cursor:    0,
-		theme:     theme.Default(),
-		todayList: &model.TodoList{
-			Name: "Today",
-			Todos: []model.Todo{
-				model.NewTodo("Add a new buy button to the product page", "Implement the button component and wire up the purchase flow"),
-				model.NewTodo("Review pull requests", "Check the open PRs and provide feedback"),
-				model.NewTodo("Update documentation", "Add examples for the new API endpoints"),
-			},
-		},
-		tomorrowList: &model.TodoList{
-			Name: "Tomorrow",
-			Todos: []model.Todo{
-				model.NewTodo("Team meeting at 10am", "Discuss Q4 roadmap and priorities"),
-				model.NewTodo("Deploy to production", "After QA approval, deploy the latest release"),
-			},
-		},
-		todoList: &model.TodoList{
-			Name: "Todos",
-			Todos: []model.Todo{
-				model.NewTodo("Research new frontend framework", "Evaluate options for modernizing the UI stack"),
-				model.NewTodo("Optimize database queries", "Profile slow queries and add appropriate indexes"),
-				model.NewTodo("Set up monitoring alerts", "Configure alerts for critical system metrics"),
-			},
-		},
+		keys:         DefaultKeyMap(),
+		activeTab:    TabToday,
+		cursor:       0,
+		theme:        theme.Default(),
+		todayList:    todayList,
+		tomorrowList: tomorrowList,
+		todoList:     todoList,
 	}
 }
 
