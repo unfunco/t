@@ -69,11 +69,9 @@ func NewTCommand(in io.Reader, out, errOut io.Writer) *cobra.Command {
 					return fmt.Errorf("error running TUI: %w", err)
 				}
 
-				if tuiModel, ok := model.(*tui.Model); ok {
-					//nolint:SA9003
-					if tuiModel.WasSubmitted() {
-						// TODO(unfunco): Save to persistent storage.
-					}
+				if tuiModel, ok := model.(*tui.Model); ok && tuiModel.WasSubmitted() {
+					// TODO(unfunco): Save to persistent storage.
+					return nil
 				}
 
 				return nil
