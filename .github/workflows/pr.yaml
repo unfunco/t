@@ -1,0 +1,33 @@
+name: PR
+
+on:
+  pull_request:
+    branches:
+    - main
+    paths-ignore:
+    - .editorconfig
+    - .gitignore
+    - LICENSE.md
+    - README.md
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version-file: go.mod
+    - name: Check formatting
+      run: test -z "$(go fmt ./...)"
+    - name: Lint source code
+      uses: golangci/golangci-lint-action@v8
+      with:
+        version: latest
+    - name: Look for suspicious constructs
+      run: test -z "$(go vet ./...)"
+    - name: Run tests
+      run: go test -cover -v ./...
