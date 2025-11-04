@@ -248,7 +248,7 @@ func (m *Model) renderList() string {
 		var titleStyle lipgloss.Style
 		if i == m.cursor {
 			if todo.Completed {
-				titleStyle = m.theme.HighlightedItemStyle().Copy().Strikethrough(true)
+				titleStyle = m.theme.HighlightedItemStyle().Foreground(m.theme.MutedText).Strikethrough(true)
 			} else {
 				titleStyle = m.theme.HighlightedItemStyle()
 			}
@@ -262,7 +262,7 @@ func (m *Model) renderList() string {
 
 		var descStyle lipgloss.Style
 		if i == m.cursor {
-			descStyle = m.theme.HighlightedItemStyle().Copy().Foreground(m.theme.MutedText)
+			descStyle = m.theme.HighlightedItemStyle().Foreground(m.theme.MutedText)
 		} else {
 			descStyle = m.theme.DescriptionStyle()
 		}

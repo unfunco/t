@@ -131,7 +131,7 @@ func TestKeyboardInput(t *testing.T) {
 	todo := &ptr.todayList.Todos[ptr.cursor]
 	initialState := todo.Completed
 	updated, _ = ptr.Update(tea.KeyMsg{Type: tea.KeyEnter})
-	ptr = updated.(*Model)
+	_ = updated.(*Model)
 	if todo.Completed == initialState {
 		t.Error("Expected todo to be toggled after Enter key")
 	}
