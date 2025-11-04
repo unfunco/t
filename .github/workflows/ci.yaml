@@ -60,6 +60,9 @@ jobs:
         config-file: .github/release-please-config.json
         manifest-file: .github/release-please-manifest.json
         token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Fetch tags
+      if: steps.release.outputs.release_created
+      run: git fetch --tags --force
     - name: Set up Go
       if: steps.release.outputs.release_created
       uses: actions/setup-go@v6

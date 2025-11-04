@@ -34,3 +34,10 @@ builds:
 
 checksum:
   name_template: checksums.txt
+
+release:
+  draft: false
+  github:
+    owner: unfunco
+    name: t
+  prerelease: auto
