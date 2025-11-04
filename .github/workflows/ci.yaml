@@ -60,3 +60,17 @@ jobs:
         config-file: .github/release-please-config.json
         manifest-file: .github/release-please-manifest.json
         token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Set up Go
+      if: steps.release.outputs.release_created
+      uses: actions/setup-go@v6
+      with:
+        go-version-file: go.mod
+    - name: Run GoReleaser
+      if: steps.release.outputs.release_created
+      uses: goreleaser/goreleaser-action@v6
+      with:
+        distribution: goreleaser
+        args: release --clean
+        version: latest
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

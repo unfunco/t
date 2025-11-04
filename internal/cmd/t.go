@@ -33,10 +33,11 @@ func NewTCommand(in io.Reader, out, errOut io.Writer) *cobra.Command {
 
 	t := &cobra.Command{
 		Use:   "t [title] [--flags]",
-		Short: "Interactive TODO manager for the CLI.",
+		Short: "Manage todo lists in the CLI.",
 		Long: heredoc.Doc(`
-			Interactive TODO manager for the command line.
-			Run without arguments to open the interactive interface.
+			The t command manages todo lists directly from the command line.
+			Add new todos, or launch an interactive interface to view and manage
+			your todos.
 		`),
 		Args:    cobra.MaximumNArgs(1),
 		Version: version.SemanticVersion,
