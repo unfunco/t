@@ -1,0 +1,62 @@
+name: PR
+
+on:
+  pull_request:
+    branches:
+    - main
+    paths-ignore:
+    - .editorconfig
+    - .gitignore
+    - LICENSE.md
+    - README.md
+  push:
+    branches:
+    - main
+    paths-ignore:
+    - .editorconfig
+    - .gitignore
+    - LICENSE.md
+    - README.md
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version-file: go.mod
+    - name: Check formatting
+      run: test -z "$(go fmt ./...)"
+    - name: Lint source code
+      uses: golangci/golangci-lint-action@v8
+      with:
+        version: latest
+    - name: Look for suspicious constructs
+      run: test -z "$(go vet ./...)"
+    - name: Run tests
+      run: go test -cover -v ./...
+
+  release:
+    name: Release?
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [ verify ]
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - name: Prepare a release
+      id: release
+      uses: googleapis/release-please-action@v4
+      with:
+        config-file: .github/release-please-config.json
+        manifest-file: .github/release-please-manifest.json
+        token: ${{ secrets.GITHUB_TOKEN }}
