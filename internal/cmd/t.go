@@ -70,6 +70,7 @@ func NewTCommand(in io.Reader, out, errOut io.Writer) *cobra.Command {
 				}
 
 				if tuiModel, ok := model.(*tui.Model); ok {
+					//nolint:SA9003
 					if tuiModel.WasSubmitted() {
 						// TODO(unfunco): Save to persistent storage.
 					}
