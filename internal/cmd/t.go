@@ -9,11 +9,13 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/MakeNowJust/heredoc/v2"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
+	"github.com/unfunco/t/internal/automation"
 	"github.com/unfunco/t/internal/list"
 	"github.com/unfunco/t/internal/model"
 	"github.com/unfunco/t/internal/storage"
@@ -80,22 +82,16 @@ func NewTCommand(in io.Reader, out, errOut io.Writer) *cobra.Command {
 					return fmt.Errorf("failed to initialise storage: %w", err)
 				}
 
-				todayList, err := store.LoadList(list.Today())
+				lists, err := automation.Sync(store, time.Now())
 				if err != nil {
-					return fmt.Errorf("failed to load %s list: %w", list.Today().Name, err)
+					return fmt.Errorf("failed to prepare lists: %w", err)
 				}
 
-				tomorrowList, err := store.LoadList(list.Tomorrow())
-				if err != nil {
-					return fmt.Errorf("failed to load %s list: %w", list.Tomorrow().Name, err)
-				}
-
-				todoList, err := store.LoadList(list.Todos())
-				if err != nil {
-					return fmt.Errorf("failed to load %s list: %w", list.Todos().Name, err)
-				}
-
-				m := tui.New(todayList, tomorrowList, todoList)
+				m := tui.New(
+					lists[list.TodayID],
+					lists[list.TomorrowID],
+					lists[list.TodosID],
+				)
 				p := tea.NewProgram(&m)
 
 				tuiModel, err := p.Run()
@@ -122,7 +118,9 @@ func NewTCommand(in io.Reader, out, errOut io.Writer) *cobra.Command {
 				return fmt.Errorf("failed to initialise storage: %w", err)
 			}
 
-			todo := model.NewTodo(title, "")
+			if _, err := automation.Sync(store, time.Now()); err != nil {
+				return fmt.Errorf("failed to prepare lists: %w", err)
+			}
 
 			var def list.Definition
 			switch {
@@ -133,6 +131,8 @@ func NewTCommand(in io.Reader, out, errOut io.Writer) *cobra.Command {
 			default:
 				def = list.Todos()
 			}
+
+			todo := model.NewTodo(title, "", list.DefaultDueDate(def.ID, time.Now()))
 
 			if err := appendToList(store, def, &todo); err != nil {
 				return err

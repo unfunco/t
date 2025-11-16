@@ -139,7 +139,7 @@ func normalizeHex(input string) (string, error) {
 	}
 
 	for _, r := range s {
-		if !((r >= '0' && r <= '9') || (r >= 'a' && r <= 'f')) {
+		if (r < '0' || r > '9') && (r < 'a' || r > 'f') {
 			return "", fmt.Errorf("invalid hex digit %q", r)
 		}
 	}

@@ -13,6 +13,7 @@ type Todo struct {
 	Completed   bool       `json:"completed"`
 	CreatedAt   time.Time  `json:"created_at"`
 	CompletedAt *time.Time `json:"completed_at"`
+	DueDate     *time.Time `json:"due_date"`
 }
 
 // TodoList represents a collection of todos with a name.
@@ -21,14 +22,17 @@ type TodoList struct {
 	Todos []Todo
 }
 
-// NewTodo creates a new todo item with the given title and description.
-func NewTodo(title, description string) Todo {
+// NewTodo creates a new todo item with the given title, description, and
+// optional due date.
+func NewTodo(title, description string, dueDate *time.Time) Todo {
+	now := time.Now()
 	return Todo{
-		ID:          time.Now().Format("20060102150405.000000"),
+		ID:          now.Format("20060102150405.000000"),
 		Title:       title,
 		Description: description,
 		Completed:   false,
-		CreatedAt:   time.Now(),
+		CreatedAt:   now,
+		DueDate:     cloneTimePtr(dueDate),
 	}
 }
 
@@ -41,4 +45,34 @@ func (t *Todo) ToggleCompleted() {
 	} else {
 		t.CompletedAt = nil
 	}
+}
+
+// SetDueDate updates the due date for the todo.
+func (t *Todo) SetDueDate(dueDate *time.Time) {
+	t.DueDate = cloneTimePtr(dueDate)
+}
+
+// IsOverdue reports whether the todo is overdue relative to the provided time.
+func (t *Todo) IsOverdue(reference time.Time) bool {
+	if t.Completed || t.DueDate == nil {
+		return false
+	}
+
+	due := startOfDay(*t.DueDate)
+	ref := startOfDay(reference)
+
+	return due.Before(ref)
+}
+
+func cloneTimePtr(in *time.Time) *time.Time {
+	if in == nil {
+		return nil
+	}
+
+	clone := *in
+	return &clone
+}
+
+func startOfDay(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 }
