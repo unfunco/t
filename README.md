@@ -54,6 +54,14 @@ cd t
 go build
 ```
 
+Play with some test data:
+
+```bash
+mkdir testdata/t
+cp testdata/*.json testdata/t/
+XDG_DATA_HOME="$PWD/testdata" XDG_CONFIG_HOME="$PWD/testdata" ./t
+```
+
 ## License
 
 © 2025 [Daniel Morris]\

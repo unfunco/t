@@ -1,0 +1,9 @@
+{
+  "theme": {
+    "text": "#F8F8FF",
+    "muted": "#6B7A8F",
+    "highlight": "#3DDC97",
+    "success": "#C0FF00",
+    "worry": "#FF4F81"
+  }
+}

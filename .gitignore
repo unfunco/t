@@ -5,6 +5,7 @@
 .DS_Store
 .idea/
 Thumbs.db
+testdata/t/
 
 # Go.
 *.coverprofile
