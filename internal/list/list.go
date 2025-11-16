@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2025 Daniel Morris <daniel@honestempire.com>
+// SPDX-License-Identifier: MIT
+
 package list
 
 // ID identifies a todo list.

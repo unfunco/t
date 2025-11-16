@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2025 Daniel Morris <daniel@honestempire.com>
+// SPDX-License-Identifier: MIT
+
 package tui
 
 import (
@@ -520,12 +523,10 @@ func (m *Model) openEditForm() tea.Cmd {
 		return nil
 	}
 
-	// Check if there are any todos to edit
 	if len(l.Todos) == 0 {
 		return nil
 	}
 
-	// Ensure cursor is within bounds
 	if m.cursor < 0 || m.cursor >= len(l.Todos) {
 		return nil
 	}
@@ -536,12 +537,10 @@ func (m *Model) openEditForm() tea.Cmd {
 	m.formTargetList = m.activeTab
 	m.editingIndex = m.cursor
 
-	// Populate with existing todo data
 	m.titleInput.SetValue(todo.Title)
 	m.descriptionInput.SetValue(todo.Description)
 	m.descriptionInput.Blur()
 
-	// Return the focus command for the title input
 	return m.titleInput.Focus()
 }
 
@@ -564,26 +563,20 @@ func (m *Model) submitForm() {
 	description := strings.TrimSpace(m.descriptionInput.Value())
 
 	if m.formMode == FormModeEdit {
-		// Update existing todo
 		currentList := m.getCurrentList()
 		if currentList != nil && m.editingIndex < len(currentList.Todos) {
-			// Keep the original ID and timestamps
 			todo := currentList.Todos[m.editingIndex]
 			todo.Title = title
 			todo.Description = description
 
-			// If moving to a different list
 			if m.formTargetList != m.activeTab {
-				// Remove from current list
 				currentList.Todos = append(currentList.Todos[:m.editingIndex], currentList.Todos[m.editingIndex+1:]...)
 
-				// Add to target list
 				targetList := m.getListByTab(m.formTargetList)
 				if targetList != nil {
 					targetList.Todos = append(targetList.Todos, todo)
 				}
 
-				// Reset cursor if we removed the last item
 				if m.cursor >= len(currentList.Todos) && m.cursor > 0 {
 					m.cursor--
 				}
@@ -592,7 +585,6 @@ func (m *Model) submitForm() {
 			}
 		}
 	} else {
-		// Add new todo
 		newTodo := model.NewTodo(title, description)
 		targetList := m.getListByTab(m.formTargetList)
 		if targetList != nil {
@@ -661,7 +653,6 @@ func (m *Model) getListByTab(tab Tab) *model.TodoList {
 func (m *Model) renderForm() string {
 	var b strings.Builder
 
-	// Title
 	titleStyle := m.theme.ActiveTabStyle()
 	formTitle := "Add Todo"
 	if m.formMode == FormModeEdit {
@@ -670,7 +661,6 @@ func (m *Model) renderForm() string {
 	b.WriteString(titleStyle.Render(formTitle))
 	b.WriteString("\n\n")
 
-	// Title input
 	titleLabel := "Title:"
 	if m.formField == FormFieldTitle {
 		titleLabel = m.theme.HighlightedItemStyle().Render("❯ Title:")
@@ -681,7 +671,6 @@ func (m *Model) renderForm() string {
 	b.WriteString(m.titleInput.View())
 	b.WriteString("\n\n")
 
-	// Description input
 	descLabel := "Description:"
 	if m.formField == FormFieldDescription {
 		descLabel = m.theme.HighlightedItemStyle().Render("❯ Description:")
@@ -692,7 +681,6 @@ func (m *Model) renderForm() string {
 	b.WriteString(m.descriptionInput.View())
 	b.WriteString("\n\n")
 
-	// List selector
 	listLabel := "Add to list:"
 	if m.formMode == FormModeEdit {
 		listLabel = "Move to list:"
@@ -705,7 +693,6 @@ func (m *Model) renderForm() string {
 
 	b.WriteString(listLabel + "\n")
 
-	// Show list options
 	for i := TabToday; i < tabCount; i++ {
 		var listStyle lipgloss.Style
 		if i == m.formTargetList {
