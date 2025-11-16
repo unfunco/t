@@ -6,6 +6,7 @@ package tui
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textarea"
@@ -337,6 +338,7 @@ func (m *Model) renderList() string {
 		return "No todos yet."
 	}
 
+	now := time.Now()
 	var items []string
 	for i, todo := range l.Todos {
 		var checkbox string
@@ -379,6 +381,11 @@ func (m *Model) renderList() string {
 			checkbox,
 			titleStyle.Render(todo.Title),
 		)
+
+		if todo.IsOverdue(now) {
+			overdueLabel := m.theme.WorryStyle().Render("! Overdue")
+			item += " " + overdueLabel
+		}
 
 		if todo.Description != "" {
 			item += "\n      " + descStyle.Render(todo.Description)
@@ -569,6 +576,7 @@ func (m *Model) submitForm() {
 			todo.Description = description
 
 			if m.formTargetList != m.activeTab {
+				todo.SetDueDate(m.dueDateForTab(m.formTargetList))
 				currentList.Todos = append(currentList.Todos[:m.editingIndex], currentList.Todos[m.editingIndex+1:]...)
 
 				targetList := m.getListByTab(m.formTargetList)
@@ -584,7 +592,7 @@ func (m *Model) submitForm() {
 			}
 		}
 	} else {
-		newTodo := model.NewTodo(title, description)
+		newTodo := model.NewTodo(title, description, m.dueDateForTab(m.formTargetList))
 		targetList := m.getListByTab(m.formTargetList)
 		if targetList != nil {
 			targetList.Todos = append(targetList.Todos, newTodo)
@@ -643,6 +651,20 @@ func (m *Model) getListByTab(tab Tab) *model.TodoList {
 		return m.tomorrowList
 	case TabTodo:
 		return m.todoList
+	default:
+		return nil
+	}
+}
+
+func (m *Model) dueDateForTab(tab Tab) *time.Time {
+	now := time.Now()
+	switch tab {
+	case TabToday:
+		return list.DefaultDueDate(list.TodayID, now)
+	case TabTomorrow:
+		return list.DefaultDueDate(list.TomorrowID, now)
+	case TabTodo:
+		return list.DefaultDueDate(list.TodosID, now)
 	default:
 		return nil
 	}
