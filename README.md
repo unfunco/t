@@ -37,6 +37,38 @@ Open the TUI:
 t
 ```
 
+### Configuration
+
+Themes can now adapt to both light and dark terminals. By default `t` uses
+`mode: "auto"` and switches palettes based on the detected background colour.
+You can force either palette or customise the colours by editing `config.json`
+in your config directory (typically `~/.config/t/config.json`):
+
+```json
+{
+  "theme": {
+    "mode": "auto",
+    "dark": {
+      "text": "#FFFFFF",
+      "muted": "#696969",
+      "highlight": "#58C5C7",
+      "success": "#99CC00",
+      "worry": "#FF7676"
+    },
+    "light": {
+      "text": "#121417",
+      "muted": "#61646B",
+      "highlight": "#205CBE",
+      "success": "#007A3B",
+      "worry": "#C62828"
+    }
+  }
+}
+```
+
+Set `"mode": "dark"` or `"mode": "light"` to lock the palette regardless of
+background detection.
+
 ### Development and testing
 
 #### Requirements

@@ -28,11 +28,12 @@ func main() {
 		cfg = loadedCfg
 	}
 
-	th := theme.Default()
-	if parsedTheme, err := theme.FromConfig(cfg.Theme); err != nil {
+	hasDarkBackground := lipgloss.HasDarkBackground(os.Stdin, os.Stdout)
+
+	th, err := theme.FromConfig(cfg.Theme, hasDarkBackground)
+	if err != nil {
 		logThemeWarning(configPath, err)
-	} else {
-		th = parsedTheme
+		th = theme.MustFromConfig(theme.DefaultConfig(), hasDarkBackground)
 	}
 
 	if err := fang.Execute(

@@ -1,9 +1,19 @@
 {
   "theme": {
-    "text": "#F8F8FF",
-    "muted": "#6B7A8F",
-    "highlight": "#3DDC97",
-    "success": "#C0FF00",
-    "worry": "#FF4F81"
+    "mode": "auto",
+    "dark": {
+      "text": "#F8F8FF",
+      "muted": "#6B7A8F",
+      "highlight": "#3DDC97",
+      "success": "#C0FF00",
+      "worry": "#FF4F81"
+    },
+    "light": {
+      "text": "#1E1E22",
+      "muted": "#5A5F73",
+      "highlight": "#005F99",
+      "success": "#007A3B",
+      "worry": "#B71C1C"
+    }
   }
 }

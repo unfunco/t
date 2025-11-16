@@ -28,11 +28,21 @@ func TestLoadFromDirReadsConfigFile(t *testing.T) {
 	dir := t.TempDir()
 	content := []byte(`{
   "theme": {
-    "text": "#010101",
-    "muted": "#020202",
-    "highlight": "#030303",
-    "success": "#040404",
-    "worry": "#050505"
+    "mode": "auto",
+    "dark": {
+      "text": "#111111",
+      "muted": "#222222",
+      "highlight": "#333333",
+      "success": "#444444",
+      "worry": "#555555"
+    },
+    "light": {
+      "text": "#aaaaaa",
+      "muted": "#bbbbbb",
+      "highlight": "#cccccc",
+      "success": "#dddddd",
+      "worry": "#eeeeee"
+    }
   }
 }`)
 
@@ -46,11 +56,21 @@ func TestLoadFromDirReadsConfigFile(t *testing.T) {
 	}
 
 	want := theme.Config{
-		Text:      "#010101",
-		Muted:     "#020202",
-		Highlight: "#030303",
-		Success:   "#040404",
-		Worry:     "#050505",
+		Mode: theme.ModeAuto,
+		Dark: theme.PaletteConfig{
+			Text:      "#111111",
+			Muted:     "#222222",
+			Highlight: "#333333",
+			Success:   "#444444",
+			Worry:     "#555555",
+		},
+		Light: theme.PaletteConfig{
+			Text:      "#aaaaaa",
+			Muted:     "#bbbbbb",
+			Highlight: "#cccccc",
+			Success:   "#dddddd",
+			Worry:     "#eeeeee",
+		},
 	}
 
 	if cfg.Theme != want {
