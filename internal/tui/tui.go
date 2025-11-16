@@ -628,9 +628,9 @@ func (m *Model) updateFormFocus() tea.Cmd {
 		m.titleInput.Blur()
 		m.descriptionInput.Blur()
 		return nil
-	case formFieldCount: // Should not happen.
+	default:
+		return nil
 	}
-	return nil
 }
 
 // nextFormList cycles to the next list option.

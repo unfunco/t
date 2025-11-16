@@ -221,7 +221,6 @@ func TestEditFormMoveKeepsCorrectTodo(t *testing.T) {
 	m.cursor = 1
 
 	target := m.todayList.Todos[m.cursor]
-	target.Title = "Original Title"
 
 	m.openEditForm()
 	m.titleInput.SetValue("Updated Title")
