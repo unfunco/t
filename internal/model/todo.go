@@ -27,7 +27,7 @@ type TodoList struct {
 func NewTodo(title, description string, dueDate *time.Time) Todo {
 	now := time.Now()
 	return Todo{
-		ID:          time.Now().Format("20060102150405.000000"),
+		ID:          now.Format("20060102150405.000000"),
 		Title:       title,
 		Description: description,
 		Completed:   false,
