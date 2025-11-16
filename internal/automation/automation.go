@@ -30,11 +30,7 @@ func Sync(store storage.Storage, now time.Time) (map[list.ID]*model.TodoList, er
 	}
 
 	todayStart := startOfDay(now)
-	changed := false
-
-	if ensureDueDates(lists[list.TodayID], list.TodayID) {
-		changed = true
-	}
+	changed := ensureDueDates(lists[list.TodayID], list.TodayID)
 
 	if ensureDueDates(lists[list.TomorrowID], list.TomorrowID) {
 		changed = true
