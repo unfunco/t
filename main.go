@@ -2,29 +2,71 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"image/color"
 	"os"
 
+	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/fang"
-	"github.com/charmbracelet/lipgloss/v2"
 	"github.com/unfunco/t/internal/cmd"
+	"github.com/unfunco/t/internal/config"
 	"github.com/unfunco/t/internal/theme"
 )
 
 func main() {
+	configPath := ""
+	if path, err := config.Path(); err == nil {
+		configPath = path
+	}
+
+	cfg := config.Config{
+		Theme: theme.DefaultConfig(),
+	}
+	if loadedCfg, err := config.Load(); err != nil {
+		logConfigWarning(configPath, err)
+	} else {
+		cfg = loadedCfg
+	}
+
+	th := theme.Default()
+	if parsedTheme, err := theme.FromConfig(cfg.Theme); err != nil {
+		logThemeWarning(configPath, err)
+	} else {
+		th = parsedTheme
+	}
+
 	if err := fang.Execute(
 		context.Background(),
-		cmd.NewDefaultTCommand(),
-		fang.WithColorSchemeFunc(customColorScheme),
+		cmd.NewDefaultTCommandWithTheme(th),
+		fang.WithColorSchemeFunc(func(c lipgloss.LightDarkFunc) fang.ColorScheme {
+			return customColorScheme(c, th)
+		}),
 		fang.WithNotifySignal(os.Interrupt, os.Kill),
 	); err != nil {
 		os.Exit(1)
 	}
 }
 
-func customColorScheme(c lipgloss.LightDarkFunc) fang.ColorScheme {
+func logConfigWarning(configPath string, err error) {
+	if configPath == "" {
+		_, _ = fmt.Fprintf(os.Stderr, "warning: failed to load config: %v; using defaults\n", err)
+		return
+	}
+
+	_, _ = fmt.Fprintf(os.Stderr, "warning: failed to load config at %s: %v; using defaults\n", configPath, err)
+}
+
+func logThemeWarning(configPath string, err error) {
+	if configPath == "" {
+		_, _ = fmt.Fprintf(os.Stderr, "warning: invalid theme configuration: %v; using default theme\n", err)
+		return
+	}
+
+	_, _ = fmt.Fprintf(os.Stderr, "warning: invalid theme configuration in %s: %v; using default theme\n", configPath, err)
+}
+
+func customColorScheme(c lipgloss.LightDarkFunc, th theme.Theme) fang.ColorScheme {
 	scheme := fang.AnsiColorScheme(c)
-	th := theme.Default()
 
 	scheme.Base = th.Text.RGBA()
 	scheme.Description = th.Muted.RGBA()

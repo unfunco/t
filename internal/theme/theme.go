@@ -14,11 +14,22 @@ import (
 
 // Config represents the raw theme configuration values.
 type Config struct {
-	Text      string
-	Muted     string
-	Highlight string
-	Success   string
-	Worry     string
+	Text      string `json:"text"`
+	Muted     string `json:"muted"`
+	Highlight string `json:"highlight"`
+	Success   string `json:"success"`
+	Worry     string `json:"worry"`
+}
+
+// DefaultConfig returns the built-in theme configuration.
+func DefaultConfig() Config {
+	return Config{
+		Text:      "#FFFFFF",
+		Muted:     "#696969",
+		Highlight: "#58C5C7",
+		Success:   "#99CC00",
+		Worry:     "#FF7676",
+	}
 }
 
 // Theme defines the theme for the TUI and CLI help docs.
@@ -29,11 +40,11 @@ type Theme struct {
 	Success   PaletteColor
 	Worry     PaletteColor
 
-	// UI characters
-	CursorChar string // Character shown next to selected todo item
+	CursorChar string // Character shown next to selected todo item.
 }
 
-// PaletteColor keeps a hex colour string for LipGloss and an RGBA version for Fang.
+// PaletteColor keeps a hex colour string for LipGloss and an RGBA version
+// for Fang.
 type PaletteColor struct {
 	raw  string
 	rgba color.RGBA
@@ -51,13 +62,7 @@ func (c PaletteColor) RGBA() color.RGBA {
 
 // Default returns the default theme.
 func Default() Theme {
-	return MustFromConfig(Config{
-		Text:      "#FFFFFF",
-		Muted:     "#696969",
-		Highlight: "#58C5C7",
-		Success:   "#99CC00",
-		Worry:     "#FF7676",
-	})
+	return MustFromConfig(DefaultConfig())
 }
 
 // MustFromConfig creates a Theme from a Config and panics if parsing fails.
@@ -66,6 +71,7 @@ func MustFromConfig(cfg Config) Theme {
 	if err != nil {
 		panic(fmt.Sprintf("invalid theme configuration: %v", err))
 	}
+
 	return t
 }
 
@@ -133,7 +139,7 @@ func normalizeHex(input string) (string, error) {
 	case 3:
 		s = fmt.Sprintf("%c%c%c%c%c%c", s[0], s[0], s[1], s[1], s[2], s[2])
 	case 6:
-		// Sound.
+		// All good in the hood.
 	default:
 		return "", fmt.Errorf("hex colour must be 3 or 6 characters, got %d", len(s))
 	}

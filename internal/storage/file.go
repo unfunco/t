@@ -11,6 +11,7 @@ import (
 
 	"github.com/unfunco/t/internal/list"
 	"github.com/unfunco/t/internal/model"
+	"github.com/unfunco/t/internal/paths"
 )
 
 // File persists todos on disk.
@@ -23,7 +24,7 @@ var _ Storage = (*File)(nil)
 // NewFileStorage creates file-backed storage rooted in the default data
 // directory, typically ~/.local/share/t.
 func NewFileStorage() (*File, error) {
-	dataDir, err := getDataDir()
+	dataDir, err := paths.DefaultDataDir()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get data directory: %w", err)
 	}
@@ -38,24 +39,6 @@ func NewFileStorageWithDir(dataDir string) (*File, error) {
 	}
 
 	return &File{dataDir}, nil
-}
-
-// getDataDir returns the path to the data directory.
-func getDataDir() (string, error) {
-	var configDir string
-
-	if xdgDataHome := os.Getenv("XDG_DATA_HOME"); xdgDataHome != "" {
-		configDir = xdgDataHome
-	} else {
-		homeDir, err := os.UserHomeDir()
-		if err != nil {
-			return "", fmt.Errorf("failed to get user home directory: %w", err)
-		}
-
-		configDir = filepath.Join(homeDir, ".local", "share")
-	}
-
-	return filepath.Join(configDir, "t"), nil
 }
 
 // ensureDataDir creates the data directory if it doesn't exist.

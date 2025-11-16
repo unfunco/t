@@ -19,6 +19,7 @@ import (
 	"github.com/unfunco/t/internal/list"
 	"github.com/unfunco/t/internal/model"
 	"github.com/unfunco/t/internal/storage"
+	"github.com/unfunco/t/internal/theme"
 	"github.com/unfunco/t/internal/tui"
 	"github.com/unfunco/t/internal/version"
 )
@@ -30,15 +31,21 @@ var (
 	ErrEmptyTitle         = errors.New("todo title cannot be blank")
 )
 
-// NewDefaultTCommand returns a new t command configured with the standard
-// input, output, and error file descriptors.
-func NewDefaultTCommand() *cobra.Command {
-	return NewTCommand(os.Stdin, os.Stdout, os.Stderr)
+// NewDefaultTCommandWithTheme returns a new t command using the provided theme
+// and configured with the standard IO file descriptors.
+func NewDefaultTCommandWithTheme(th theme.Theme) *cobra.Command {
+	return NewTCommandWithTheme(os.Stdin, os.Stdout, os.Stderr, th)
 }
 
 // NewTCommand returns a new t command configured with the given input, output,
 // and error file descriptors.
 func NewTCommand(in io.Reader, out, errOut io.Writer) *cobra.Command {
+	return NewTCommandWithTheme(in, out, errOut, theme.Default())
+}
+
+// NewTCommandWithTheme returns a new t command configured with the provided
+// input, output, error descriptors and theme.
+func NewTCommandWithTheme(in io.Reader, out, errOut io.Writer, th theme.Theme) *cobra.Command {
 	var (
 		today    bool
 		tomorrow bool
@@ -88,6 +95,7 @@ func NewTCommand(in io.Reader, out, errOut io.Writer) *cobra.Command {
 				}
 
 				m := tui.New(
+					th,
 					lists[list.TodayID],
 					lists[list.TomorrowID],
 					lists[list.TodosID],
