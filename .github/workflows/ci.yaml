@@ -4,11 +4,11 @@ on:
   push:
     branches:
     - main
-    paths:
-    - .github/workflows/ci.yaml
-    - '**/*.go'
-    - go.mod
-    - go.sum
+    paths-ignore:
+    - .editorconfig
+    - .gitignore
+    - LICENSE.md
+    - README.md
 
 jobs:
   verify:
