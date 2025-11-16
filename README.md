@@ -2,6 +2,10 @@
 
 Manage your todo lists in the CLI.
 
+<p align="center">
+  <img src="demo.gif" alt="Demo of the t CLI" width="65%">
+</p>
+
 ## Getting started
 
 ### Installation and usage
@@ -92,6 +96,13 @@ Play with some test data:
 mkdir testdata/t
 cp testdata/*.json testdata/t/
 XDG_DATA_HOME="$PWD/testdata" XDG_CONFIG_HOME="$PWD/testdata" ./t
+```
+
+#### Generate the demo gif
+
+```bash
+cp testdata/*.json testdata/t
+PATH="$PWD:$PATH" vhs demo.tape
 ```
 
 ## License
