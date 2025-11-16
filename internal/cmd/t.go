@@ -5,17 +5,25 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
+	"unicode/utf8"
 
 	"github.com/MakeNowJust/heredoc/v2"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
+	"github.com/unfunco/t/internal/list"
 	"github.com/unfunco/t/internal/model"
 	"github.com/unfunco/t/internal/storage"
 	"github.com/unfunco/t/internal/tui"
 	"github.com/unfunco/t/internal/version"
 )
 
-var ErrAmbiguousDateFlags = errors.New("only one of --today and --tomorrow may be specified")
+const titleCharLimit = 100
+
+var (
+	ErrAmbiguousDateFlags = errors.New("only one of --today and --tomorrow may be specified")
+	ErrEmptyTitle         = errors.New("todo title cannot be blank")
+)
 
 // NewDefaultTCommand returns a new t command configured with the standard
 // input, output, and error file descriptors.
@@ -33,7 +41,7 @@ func NewTCommand(in io.Reader, out, errOut io.Writer) *cobra.Command {
 
 	t := &cobra.Command{
 		Use:   "t [title] [--flags]",
-		Short: "Manage todo lists in the CLI.",
+		Short: "Manage your todo lists in the CLI.",
 		Long: heredoc.Doc(`
 			The t command manages todo lists directly from the command line.
 			Add new todos, or launch an interactive interface to view and manage
@@ -49,39 +57,39 @@ func NewTCommand(in io.Reader, out, errOut io.Writer) *cobra.Command {
 			),
 		},
 		Example: heredoc.Doc(`
-			# Open interactive interface.
-			t
-
-			# Add new TODOs.
+			# Add some todos.
 			t "Do something"
 			t "Do something today" --today
 			t "Do something tomorrow" --tomorrow
-        `),
+
+			# Open the interactive interface.
+			t
+		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if today && tomorrow {
 				return ErrAmbiguousDateFlags
 			}
 
-			store, err := storage.New()
-			if err != nil {
-				return fmt.Errorf("failed to initialize storage: %w", err)
-			}
-
 			// Launch the TUI if no title argument is provided.
 			if len(args) == 0 {
-				todayList, err := store.LoadTodayList()
+				store, err := storage.NewFileStorage()
 				if err != nil {
-					return fmt.Errorf("failed to load today list: %w", err)
+					return fmt.Errorf("failed to initialise storage: %w", err)
 				}
 
-				tomorrowList, err := store.LoadTomorrowList()
+				todayList, err := store.LoadList(list.Today())
 				if err != nil {
-					return fmt.Errorf("failed to load tomorrow list: %w", err)
+					return fmt.Errorf("failed to load %s list: %w", list.Today().Name, err)
 				}
 
-				todoList, err := store.LoadTodoList()
+				tomorrowList, err := store.LoadList(list.Tomorrow())
 				if err != nil {
-					return fmt.Errorf("failed to load todo list: %w", err)
+					return fmt.Errorf("failed to load %s list: %w", list.Tomorrow().Name, err)
+				}
+
+				todoList, err := store.LoadList(list.Todos())
+				if err != nil {
+					return fmt.Errorf("failed to load %s list: %w", list.Todos().Name, err)
 				}
 
 				m := tui.New(todayList, tomorrowList, todoList)
@@ -93,48 +101,38 @@ func NewTCommand(in io.Reader, out, errOut io.Writer) *cobra.Command {
 				}
 
 				if m, ok := tuiModel.(*tui.Model); ok && m.WasSubmitted() {
-					if err := store.SaveAll(m.GetTodayList(), m.GetTomorrowList(), m.GetTodosList()); err != nil {
-						return fmt.Errorf("failed to save changes: %w", err)
+					if err := saveLists(store, m); err != nil {
+						return err
 					}
 				}
 
 				return nil
 			}
 
-			title := args[0]
+			title := strings.TrimSpace(args[0])
+			if err := validateTitle(title); err != nil {
+				return err
+			}
+
+			store, err := storage.NewFileStorage()
+			if err != nil {
+				return fmt.Errorf("failed to initialise storage: %w", err)
+			}
+
 			todo := model.NewTodo(title, "")
 
-			var targetList *model.TodoList
-			if today {
-				targetList, err = store.LoadTodayList()
-				if err != nil {
-					return fmt.Errorf("failed to load today list: %w", err)
-				}
-				targetList.Todos = append(targetList.Todos, todo)
-				if err := store.SaveToday(targetList); err != nil {
-					return fmt.Errorf("failed to save today list: %w", err)
-				}
-				_, _ = fmt.Fprintf(out, "Added to Today: %s\n", title)
-			} else if tomorrow {
-				targetList, err = store.LoadTomorrowList()
-				if err != nil {
-					return fmt.Errorf("failed to load tomorrow list: %w", err)
-				}
-				targetList.Todos = append(targetList.Todos, todo)
-				if err := store.SaveTomorrow(targetList); err != nil {
-					return fmt.Errorf("failed to save tomorrow list: %w", err)
-				}
-				_, _ = fmt.Fprintf(out, "Added to Tomorrow: %s\n", title)
-			} else {
-				targetList, err = store.LoadTodoList()
-				if err != nil {
-					return fmt.Errorf("failed to load todo list: %w", err)
-				}
-				targetList.Todos = append(targetList.Todos, todo)
-				if err := store.SaveTodo(targetList); err != nil {
-					return fmt.Errorf("failed to save todo list: %w", err)
-				}
-				_, _ = fmt.Fprintf(out, "Added to Todos: %s\n", title)
+			var def list.Definition
+			switch {
+			case today:
+				def = list.Today()
+			case tomorrow:
+				def = list.Tomorrow()
+			default:
+				def = list.Todos()
+			}
+
+			if err := appendToList(store, def, &todo); err != nil {
+				return err
 			}
 
 			return nil
@@ -150,8 +148,49 @@ func NewTCommand(in io.Reader, out, errOut io.Writer) *cobra.Command {
 		Hidden: true,
 	})
 
-	t.Flags().BoolVar(&today, "today", false, "Add a TODO for today")
-	t.Flags().BoolVar(&tomorrow, "tomorrow", false, "Add a TODO for tomorrow")
+	t.Flags().BoolVar(&today, "today", false, "Add a todo for today")
+	t.Flags().BoolVar(&tomorrow, "tomorrow", false, "Add a todo for tomorrow")
 
 	return t
+}
+
+func saveLists(store storage.Storage, m *tui.Model) error {
+	for _, def := range list.Default() {
+		l := m.ListByID(def.ID)
+		if l == nil {
+			continue
+		}
+		if err := store.SaveList(def, l); err != nil {
+			return fmt.Errorf("failed to save %s list: %w", def.Name, err)
+		}
+	}
+
+	return nil
+}
+
+func appendToList(store storage.Storage, def list.Definition, todo *model.Todo) error {
+	targetList, err := store.LoadList(def)
+	if err != nil {
+		return fmt.Errorf("failed to load %s list: %w", def.Name, err)
+	}
+
+	targetList.Todos = append(targetList.Todos, *todo)
+
+	if err := store.SaveList(def, targetList); err != nil {
+		return fmt.Errorf("failed to save %s list: %w", def.Name, err)
+	}
+
+	return nil
+}
+
+func validateTitle(t string) error {
+	if t == "" {
+		return ErrEmptyTitle
+	}
+
+	if utf8.RuneCountInString(t) > titleCharLimit {
+		return fmt.Errorf("todo title must be %d characters or fewer", titleCharLimit)
+	}
+
+	return nil
 }

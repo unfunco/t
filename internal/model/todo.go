@@ -4,12 +4,12 @@ import "time"
 
 // Todo represents a single todo item.
 type Todo struct {
-	ID          string
-	Title       string
-	Description string
-	Completed   bool
-	CreatedAt   time.Time
-	CompletedAt *time.Time
+	ID          string     `json:"id"`
+	Title       string     `json:"title"`
+	Description string     `json:"description"`
+	Completed   bool       `json:"completed"`
+	CreatedAt   time.Time  `json:"created_at"`
+	CompletedAt *time.Time `json:"completed_at"`
 }
 
 // TodoList represents a collection of todos with a name.
@@ -21,7 +21,7 @@ type TodoList struct {
 // NewTodo creates a new todo item with the given title and description.
 func NewTodo(title, description string) Todo {
 	return Todo{
-		ID:          generateID(),
+		ID:          time.Now().Format("20060102150405.000000"),
 		Title:       title,
 		Description: description,
 		Completed:   false,
@@ -29,8 +29,8 @@ func NewTodo(title, description string) Todo {
 	}
 }
 
-// Toggle toggles the completion status of a Todo.
-func (t *Todo) Toggle() {
+// ToggleCompleted toggles the completion status of a Todo.
+func (t *Todo) ToggleCompleted() {
 	t.Completed = !t.Completed
 	if t.Completed {
 		now := time.Now()
@@ -38,9 +38,4 @@ func (t *Todo) Toggle() {
 	} else {
 		t.CompletedAt = nil
 	}
-}
-
-// generateID generates a unique ID for a todo item.
-func generateID() string {
-	return time.Now().Format("20060102150405.000000")
 }

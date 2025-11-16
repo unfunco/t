@@ -1,22 +1,14 @@
-name: PR
+name: CI
 
 on:
-  pull_request:
-    branches:
-    - main
-    paths-ignore:
-    - .editorconfig
-    - .gitignore
-    - LICENSE.md
-    - README.md
   push:
     branches:
     - main
-    paths-ignore:
-    - .editorconfig
-    - .gitignore
-    - LICENSE.md
-    - README.md
+    paths:
+    - .github/workflows/ci.yaml
+    - '**/*.go'
+    - go.mod
+    - go.sum
 
 jobs:
   verify:
@@ -42,7 +34,6 @@ jobs:
 
   release:
     name: Release?
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [ verify ]
     permissions:
       contents: write
@@ -72,8 +63,8 @@ jobs:
       if: steps.release.outputs.release_created
       uses: goreleaser/goreleaser-action@v6
       with:
-        distribution: goreleaser
         args: release --clean
+        distribution: goreleaser
         version: latest
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,25 +1,37 @@
 # t
 
-Manage todo lists in the CLI.
+Manage your todo lists in the CLI.
 
 ## Getting started
 
 ### Installation and usage
 
-Add an item to the general todo list.
+#### macOS
+
+```bash
+brew tap unfunco/tap
+brew install t
+```
+
+Add an item to the general todo list:
 
 ```bash
 t "Do something"
 ```
 
-Add an item to today's todo list.
+Add an item to today's todo list:
 
 ```bash
-# --tomorrow works too
 t "Do something today" --today
 ```
 
-Open the TUI.
+Add an item to tomorrow's todo list:
+
+```bash
+t "Do something tomorrow" --tomorrow
+```
+
+Open the TUI:
 
 ```bash
 t
@@ -30,6 +42,8 @@ t
 #### Requirements
 
 - [Go] 1.25+
+
+Clone the repository and navigate to the `t` directory.
 
 ```bash
 git clone git@github.com:unfunco/t.git
