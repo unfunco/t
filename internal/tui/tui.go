@@ -17,14 +17,14 @@ import (
 	"github.com/unfunco/t/internal/theme"
 )
 
-// Tab represents a tab in the UI.
+// Tab represents a tab in the UI, which corresponds to a todo list.
 type Tab int
 
 const (
 	TabToday Tab = iota
 	TabTomorrow
 	TabTodo
-	tabCount
+	TabCount
 )
 
 // String implements the fmt.Stringer interface and returns the title of a Tab.
@@ -150,7 +150,7 @@ type Model struct {
 	titleInput       textinput.Model
 	descriptionInput textarea.Model
 	formTargetList   Tab
-	editingIndex     int // Index of todo being edited
+	editingIndex     int
 }
 
 // New creates a new TUI model with the provided todo lists.
@@ -296,7 +296,6 @@ func (m *Model) View() string {
 
 	var b strings.Builder
 
-	// Only show tabs if there are any todos in any list
 	if m.hasAnyTodos() {
 		b.WriteString(m.renderTabs())
 		b.WriteString("\n\n")
@@ -313,7 +312,7 @@ func (m *Model) View() string {
 func (m *Model) renderTabs() string {
 	var tabs []string
 
-	for i := TabToday; i < tabCount; i++ {
+	for i := TabToday; i < TabCount; i++ {
 		var style lipgloss.Style
 		if i == m.activeTab {
 			style = m.theme.ActiveTabStyle()
@@ -356,7 +355,7 @@ func (m *Model) renderList() string {
 		var titleStyle lipgloss.Style
 		if i == m.cursor {
 			if todo.Completed {
-				titleStyle = m.theme.HighlightedItemStyle().Foreground(m.theme.MutedText).Strikethrough(true)
+				titleStyle = m.theme.HighlightedItemStyle().Foreground(m.theme.Muted.LipGloss()).Strikethrough(true)
 			} else {
 				titleStyle = m.theme.HighlightedItemStyle()
 			}
@@ -370,7 +369,7 @@ func (m *Model) renderList() string {
 
 		var descStyle lipgloss.Style
 		if i == m.cursor {
-			descStyle = m.theme.HighlightedItemStyle().Foreground(m.theme.MutedText)
+			descStyle = m.theme.HighlightedItemStyle().Foreground(m.theme.Muted.LipGloss())
 		} else {
 			descStyle = m.theme.DescriptionStyle()
 		}
@@ -451,12 +450,12 @@ func (m *Model) cursorDown() {
 
 // nextTab moves to the next tab.
 func (m *Model) nextTab() {
-	m.activeTab = (m.activeTab + 1) % tabCount
+	m.activeTab = (m.activeTab + 1) % TabCount
 }
 
 // previousTab moves to the previous tab.
 func (m *Model) previousTab() {
-	m.activeTab = (m.activeTab + tabCount - 1) % tabCount
+	m.activeTab = (m.activeTab + TabCount - 1) % TabCount
 }
 
 // toggleCurrent toggles the completion status of the current todo.
@@ -627,12 +626,12 @@ func (m *Model) updateFormFocus() tea.Cmd {
 
 // nextFormList cycles to the next list option.
 func (m *Model) nextFormList() {
-	m.formTargetList = (m.formTargetList + 1) % tabCount
+	m.formTargetList = (m.formTargetList + 1) % TabCount
 }
 
 // previousFormList cycles to the previous list option.
 func (m *Model) previousFormList() {
-	m.formTargetList = (m.formTargetList + tabCount - 1) % tabCount
+	m.formTargetList = (m.formTargetList + TabCount - 1) % TabCount
 }
 
 // getListByTab returns the todo list for the given tab.
@@ -693,7 +692,7 @@ func (m *Model) renderForm() string {
 
 	b.WriteString(listLabel + "\n")
 
-	for i := TabToday; i < tabCount; i++ {
+	for i := TabToday; i < TabCount; i++ {
 		var listStyle lipgloss.Style
 		if i == m.formTargetList {
 			if m.formField == FormFieldList {
