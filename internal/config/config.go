@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/unfunco/t/internal/icons"
 	"github.com/unfunco/t/internal/paths"
 	"github.com/unfunco/t/internal/theme"
 )
@@ -19,6 +20,7 @@ const configFilename = "config.json"
 
 // Config captures the configurable application properties.
 type Config struct {
+	Icons icons.Config `json:"icons"`
 	Theme theme.Config `json:"theme"`
 }
 
@@ -40,6 +42,7 @@ func LoadFromDir(configDir string) (Config, error) {
 
 	cfg := Config{
 		Theme: theme.DefaultConfig(),
+		Icons: icons.DefaultConfig(),
 	}
 
 	configPath := filepath.Join(configDir, configFilename)

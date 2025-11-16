@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/fang"
 	"github.com/unfunco/t/internal/cmd"
 	"github.com/unfunco/t/internal/config"
+	"github.com/unfunco/t/internal/icons"
 	"github.com/unfunco/t/internal/theme"
 )
 
@@ -21,6 +22,7 @@ func main() {
 
 	cfg := config.Config{
 		Theme: theme.DefaultConfig(),
+		Icons: icons.DefaultConfig(),
 	}
 	if loadedCfg, err := config.Load(); err != nil {
 		logConfigWarning(configPath, err)
@@ -36,9 +38,15 @@ func main() {
 		th = theme.MustFromConfig(theme.DefaultConfig(), hasDarkBackground)
 	}
 
+	iconSet, err := icons.FromConfig(cfg.Icons)
+	if err != nil {
+		logIconWarning(configPath, err)
+		iconSet = icons.MustFromConfig(icons.DefaultConfig())
+	}
+
 	if err := fang.Execute(
 		context.Background(),
-		cmd.NewDefaultTCommandWithTheme(th),
+		cmd.NewDefaultTCommandWithTheme(th, iconSet),
 		fang.WithColorSchemeFunc(func(c lipgloss.LightDarkFunc) fang.ColorScheme {
 			return customColorScheme(c, th)
 		}),
@@ -64,6 +72,15 @@ func logThemeWarning(configPath string, err error) {
 	}
 
 	_, _ = fmt.Fprintf(os.Stderr, "warning: invalid theme configuration in %s: %v; using default theme\n", configPath, err)
+}
+
+func logIconWarning(configPath string, err error) {
+	if configPath == "" {
+		_, _ = fmt.Fprintf(os.Stderr, "warning: invalid icon configuration: %v; using default icons\n", err)
+		return
+	}
+
+	_, _ = fmt.Fprintf(os.Stderr, "warning: invalid icon configuration in %s: %v; using default icons\n", configPath, err)
 }
 
 func customColorScheme(c lipgloss.LightDarkFunc, th theme.Theme) fang.ColorScheme {

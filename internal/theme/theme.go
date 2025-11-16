@@ -173,7 +173,7 @@ func (pc *PaletteConfig) toTheme() (Theme, error) {
 		Highlight:  highlight,
 		Success:    success,
 		Worry:      worry,
-		CursorChar: "❯",
+		CursorChar: "",
 	}, nil
 }
 
@@ -198,8 +198,9 @@ type PaletteColor struct {
 // LipGloss converts the color to a lipgloss.Color.
 func (c *PaletteColor) LipGloss() lipgloss.Color {
 	if c == nil {
-		return lipgloss.Color("")
+		return ""
 	}
+
 	return lipgloss.Color(c.raw)
 }
 
@@ -208,6 +209,7 @@ func (c *PaletteColor) RGBA() color.RGBA {
 	if c == nil {
 		return color.RGBA{}
 	}
+
 	return c.rgba
 }
 

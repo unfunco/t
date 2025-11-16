@@ -24,6 +24,11 @@ type Definition struct {
 	Filename string
 }
 
+// String implements the fmt.Stringer interface and returns the name of the list.
+func (d Definition) String() string {
+	return d.Name
+}
+
 // day is the number of hours in a full calendar day.
 const day = 24 * time.Hour
 

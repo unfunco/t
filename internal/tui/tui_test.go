@@ -10,11 +10,26 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/unfunco/t/internal/icons"
 	"github.com/unfunco/t/internal/model"
 	"github.com/unfunco/t/internal/theme"
 )
 
-var todoCounter int
+var (
+	todoCounter int
+	testIconSet = icons.Set{
+		HelpSeparator: "  ",
+		Add:           "+",
+		Cancel:        "x",
+		Edit:          "~",
+		Navigate:      "->",
+		Overdue:       "!",
+		Select:        "*",
+		Submit:        "S",
+		Cursor:        ">",
+		ShowHelpIcons: false,
+	}
+)
 
 func newTestTodo(title, description string) model.Todo {
 	todoCounter++
@@ -44,7 +59,7 @@ func newTestModel() Model {
 		Name:  "Todos",
 		Todos: []model.Todo{newTestTodo("General task", "")},
 	}
-	return New(theme.Default(), todayList, tomorrowList, todoList)
+	return New(theme.Default(), testIconSet, todayList, tomorrowList, todoList)
 }
 
 func TestNew(t *testing.T) {

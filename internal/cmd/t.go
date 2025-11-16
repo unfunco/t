@@ -16,6 +16,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 	"github.com/unfunco/t/internal/automation"
+	"github.com/unfunco/t/internal/icons"
 	"github.com/unfunco/t/internal/list"
 	"github.com/unfunco/t/internal/model"
 	"github.com/unfunco/t/internal/storage"
@@ -32,20 +33,21 @@ var (
 )
 
 // NewDefaultTCommandWithTheme returns a new t command using the provided theme
-// and configured with the standard IO file descriptors.
-func NewDefaultTCommandWithTheme(th theme.Theme) *cobra.Command {
-	return NewTCommandWithTheme(os.Stdin, os.Stdout, os.Stderr, th)
+// and icons, configured with the standard IO file descriptors.
+func NewDefaultTCommandWithTheme(th theme.Theme, iconSet icons.Set) *cobra.Command {
+	return NewTCommandWithTheme(os.Stdin, os.Stdout, os.Stderr, th, iconSet)
 }
 
 // NewTCommand returns a new t command configured with the given input, output,
 // and error file descriptors.
 func NewTCommand(in io.Reader, out, errOut io.Writer) *cobra.Command {
-	return NewTCommandWithTheme(in, out, errOut, theme.Default())
+	defIcons := icons.MustFromConfig(icons.DefaultConfig())
+	return NewTCommandWithTheme(in, out, errOut, theme.Default(), defIcons)
 }
 
 // NewTCommandWithTheme returns a new t command configured with the provided
-// input, output, error descriptors and theme.
-func NewTCommandWithTheme(in io.Reader, out, errOut io.Writer, th theme.Theme) *cobra.Command {
+// input, output, error descriptors, theme, and icons.
+func NewTCommandWithTheme(in io.Reader, out, errOut io.Writer, th theme.Theme, iconSet icons.Set) *cobra.Command {
 	var (
 		today    bool
 		tomorrow bool
@@ -96,10 +98,12 @@ func NewTCommandWithTheme(in io.Reader, out, errOut io.Writer, th theme.Theme) *
 
 				m := tui.New(
 					th,
+					iconSet,
 					lists[list.TodayID],
 					lists[list.TomorrowID],
 					lists[list.TodosID],
 				)
+
 				p := tea.NewProgram(&m)
 
 				tuiModel, err := p.Run()

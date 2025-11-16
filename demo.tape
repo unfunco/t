@@ -5,13 +5,13 @@ Require ./t
 Set Shell zsh
 Set FontFamily "JetBrainsMono Nerd Font"
 Set FontSize 18
-Set LineHeight 1.3
-Set Width 1300
+Set LineHeight 1.2
+Set Width 1600
 Set Height 650
-Set Padding 16
+Set Padding 14
 
 Set BorderRadius 8
-Set Margin 12
+Set Margin 14
 Set WindowBar Colorful
 Set WindowBarSize 40
 
@@ -41,5 +41,6 @@ Tab
 Type "Try to avoid coffee spills this time."
 Sleep 2s
 Ctrl+S
+Sleep 2s
 Ctrl+S
 Sleep 5s

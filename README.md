@@ -2,9 +2,7 @@
 
 Manage your todo lists in the CLI.
 
-<p align="center">
-  <img src="demo.gif" alt="Demo of the t CLI" width="65%">
-</p>
+![Demo!](demo.gif)
 
 ## Getting started
 

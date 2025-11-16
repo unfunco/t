@@ -13,6 +13,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/unfunco/t/internal/icons"
 	"github.com/unfunco/t/internal/list"
 	"github.com/unfunco/t/internal/model"
 	"github.com/unfunco/t/internal/theme"
@@ -144,6 +145,7 @@ type Model struct {
 	submitted    bool
 	exited       bool
 	theme        theme.Theme
+	icons        icons.Set
 
 	// Form state
 	formMode         FormMode
@@ -155,7 +157,7 @@ type Model struct {
 }
 
 // New creates a new TUI model with the provided todo lists and theme.
-func New(th theme.Theme, todayList, tomorrowList, todoList *model.TodoList) Model {
+func New(th theme.Theme, iconSet icons.Set, todayList, tomorrowList, todoList *model.TodoList) Model {
 	ti := textinput.New()
 	ti.Placeholder = "Todo title"
 	ti.CharLimit = 100
@@ -167,11 +169,14 @@ func New(th theme.Theme, todayList, tomorrowList, todoList *model.TodoList) Mode
 	ta.SetWidth(50)
 	ta.SetHeight(3)
 
+	th.CursorChar = iconSet.Cursor
+
 	return Model{
 		keys:             DefaultKeyMap(),
 		activeTab:        TabToday,
 		cursor:           0,
 		theme:            th,
+		icons:            iconSet,
 		todayList:        todayList,
 		tomorrowList:     tomorrowList,
 		todoList:         todoList,
@@ -383,7 +388,7 @@ func (m *Model) renderList() string {
 		)
 
 		if todo.IsOverdue(now) {
-			overdueLabel := m.theme.WorryStyle().Render("! Overdue")
+			overdueLabel := m.theme.WorryStyle().Render(fmt.Sprintf("%s Overdue", m.icons.Overdue))
 			item += " " + overdueLabel
 		}
 
@@ -401,22 +406,29 @@ func (m *Model) renderList() string {
 func (m *Model) renderHelp() string {
 	var helpItems []string
 
-	helpItems = append(helpItems, "A to add")
+	helpItems = append(helpItems, m.formatHelpEntry(m.icons.Add, "A to add"))
 
 	l := m.getCurrentList()
 	if l != nil && len(l.Todos) > 0 {
-		helpItems = append(helpItems, "E to edit")
-		helpItems = append(helpItems, "Enter to select")
+		helpItems = append(helpItems, m.formatHelpEntry(m.icons.Edit, "E to edit"))
+		helpItems = append(helpItems, m.formatHelpEntry(m.icons.Select, "Enter to select"))
 	}
 
 	if m.hasAnyTodos() {
-		helpItems = append(helpItems, "Tab/Arrow keys to navigate")
-		helpItems = append(helpItems, "Ctrl+S to submit")
+		helpItems = append(helpItems, m.formatHelpEntry(m.icons.Navigate, "Tab/Arrow keys to navigate"))
+		helpItems = append(helpItems, m.formatHelpEntry(m.icons.Submit, "Ctrl+S to submit"))
 	}
 
-	helpItems = append(helpItems, "Esc to cancel")
+	helpItems = append(helpItems, m.formatHelpEntry(m.icons.Cancel, "Esc to cancel"))
 
-	return m.theme.HelpStyle().Render(strings.Join(helpItems, " · "))
+	return m.theme.HelpStyle().Render(strings.Join(helpItems, m.icons.HelpSeparator))
+}
+
+func (m *Model) formatHelpEntry(icon, text string) string {
+	if m.icons.ShowHelpIcons {
+		return fmt.Sprintf("%s  %s", icon, text)
+	}
+	return text
 }
 
 // getCurrentList returns the currently active todo list.
