@@ -11,6 +11,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/unfunco/t/internal/model"
+	"github.com/unfunco/t/internal/theme"
 )
 
 var todoCounter int
@@ -43,7 +44,7 @@ func newTestModel() Model {
 		Name:  "Todos",
 		Todos: []model.Todo{newTestTodo("General task", "")},
 	}
-	return New(todayList, tomorrowList, todoList)
+	return New(theme.Default(), todayList, tomorrowList, todoList)
 }
 
 func TestNew(t *testing.T) {

@@ -154,8 +154,8 @@ type Model struct {
 	editingIndex     int
 }
 
-// New creates a new TUI model with the provided todo lists.
-func New(todayList, tomorrowList, todoList *model.TodoList) Model {
+// New creates a new TUI model with the provided todo lists and theme.
+func New(th theme.Theme, todayList, tomorrowList, todoList *model.TodoList) Model {
 	ti := textinput.New()
 	ti.Placeholder = "Todo title"
 	ti.CharLimit = 100
@@ -171,7 +171,7 @@ func New(todayList, tomorrowList, todoList *model.TodoList) Model {
 		keys:             DefaultKeyMap(),
 		activeTab:        TabToday,
 		cursor:           0,
-		theme:            theme.Default(),
+		theme:            th,
 		todayList:        todayList,
 		tomorrowList:     tomorrowList,
 		todoList:         todoList,
