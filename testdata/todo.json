@@ -1,0 +1,20 @@
+[
+  {
+    "id": "30000728115900.000003",
+    "title": "Oil Bender's shiny metal joints",
+    "description": "Prevents squeaks during the next Robot Mafia stakeout.",
+    "completed": false,
+    "created_at": "3000-07-28T11:59:00Z",
+    "completed_at": null,
+    "due_date": null
+  },
+  {
+    "id": "30000727120042.000004",
+    "title": "Return Zoidberg's lunch coupons",
+    "description": "Technically counts as charity. Smells questionable.",
+    "completed": true,
+    "created_at": "3000-07-27T12:00:42Z",
+    "completed_at": "3000-07-28T08:12:00Z",
+    "due_date": null
+  }
+]
