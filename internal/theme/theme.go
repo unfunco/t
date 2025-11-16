@@ -12,8 +12,27 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// Mode determines which palette should be active.
+type Mode string
+
+const (
+	// ModeAuto chooses the palette based on the terminal background.
+	ModeAuto Mode = "auto"
+	// ModeDark always uses the dark palette.
+	ModeDark Mode = "dark"
+	// ModeLight always uses the light palette.
+	ModeLight Mode = "light"
+)
+
 // Config represents the raw theme configuration values.
 type Config struct {
+	Mode  Mode          `json:"mode"`
+	Light PaletteConfig `json:"light"`
+	Dark  PaletteConfig `json:"dark"`
+}
+
+// PaletteConfig describes a single colour palette.
+type PaletteConfig struct {
 	Text      string `json:"text"`
 	Muted     string `json:"muted"`
 	Highlight string `json:"highlight"`
@@ -24,12 +43,138 @@ type Config struct {
 // DefaultConfig returns the built-in theme configuration.
 func DefaultConfig() Config {
 	return Config{
+		Mode:  ModeAuto,
+		Light: DefaultLightPalette(),
+		Dark:  DefaultDarkPalette(),
+	}
+}
+
+// DefaultDarkPalette returns the built-in palette optimised for dark backgrounds.
+func DefaultDarkPalette() PaletteConfig {
+	return PaletteConfig{
 		Text:      "#FFFFFF",
 		Muted:     "#696969",
 		Highlight: "#58C5C7",
 		Success:   "#99CC00",
 		Worry:     "#FF7676",
 	}
+}
+
+// DefaultLightPalette returns the built-in palette optimised for light backgrounds.
+func DefaultLightPalette() PaletteConfig {
+	return PaletteConfig{
+		Text:      "#121417",
+		Muted:     "#61646B",
+		Highlight: "#205CBE",
+		Success:   "#007A3B",
+		Worry:     "#C62828",
+	}
+}
+
+func (cfg *Config) withDefaults() Config {
+	if cfg == nil {
+		return DefaultConfig()
+	}
+
+	out := *cfg
+	def := DefaultConfig()
+
+	if strings.TrimSpace(string(out.Mode)) == "" {
+		out.Mode = def.Mode
+	}
+
+	out.Light = out.Light.withDefaults(def.Light)
+	out.Dark = out.Dark.withDefaults(def.Dark)
+
+	return out
+}
+
+func (pc *PaletteConfig) withDefaults(fallback PaletteConfig) PaletteConfig {
+	if pc == nil {
+		return fallback
+	}
+
+	out := *pc
+
+	if strings.TrimSpace(out.Text) == "" {
+		out.Text = fallback.Text
+	}
+	if strings.TrimSpace(out.Muted) == "" {
+		out.Muted = fallback.Muted
+	}
+	if strings.TrimSpace(out.Highlight) == "" {
+		out.Highlight = fallback.Highlight
+	}
+	if strings.TrimSpace(out.Success) == "" {
+		out.Success = fallback.Success
+	}
+	if strings.TrimSpace(out.Worry) == "" {
+		out.Worry = fallback.Worry
+	}
+
+	return out
+}
+
+func (cfg *Config) paletteForMode(hasDarkBackground bool) (PaletteConfig, error) {
+	if cfg == nil {
+		def := DefaultConfig()
+		return def.paletteForMode(hasDarkBackground)
+	}
+
+	mode := strings.ToLower(strings.TrimSpace(string(cfg.Mode)))
+	switch mode {
+	case "", string(ModeAuto):
+		if hasDarkBackground {
+			return cfg.Dark, nil
+		}
+		return cfg.Light, nil
+	case string(ModeDark):
+		return cfg.Dark, nil
+	case string(ModeLight):
+		return cfg.Light, nil
+	default:
+		return PaletteConfig{}, fmt.Errorf("unknown theme mode %q", cfg.Mode)
+	}
+}
+
+func (pc *PaletteConfig) toTheme() (Theme, error) {
+	if pc == nil {
+		return Theme{}, fmt.Errorf("palette configuration cannot be nil")
+	}
+
+	text, err := parsePaletteColor(pc.Text)
+	if err != nil {
+		return Theme{}, fmt.Errorf("parse text colour: %w", err)
+	}
+
+	muted, err := parsePaletteColor(pc.Muted)
+	if err != nil {
+		return Theme{}, fmt.Errorf("parse muted colour: %w", err)
+	}
+
+	highlight, err := parsePaletteColor(pc.Highlight)
+	if err != nil {
+		return Theme{}, fmt.Errorf("parse highlight colour: %w", err)
+	}
+
+	success, err := parsePaletteColor(pc.Success)
+	if err != nil {
+		return Theme{}, fmt.Errorf("parse success colour: %w", err)
+	}
+
+	worry, err := parsePaletteColor(pc.Worry)
+	if err != nil {
+		return Theme{}, fmt.Errorf("parse worry colour: %w", err)
+	}
+
+	return Theme{
+		Text:       text,
+		Muted:      muted,
+		Highlight:  highlight,
+		Success:    success,
+		Worry:      worry,
+		CursorChar: "❯",
+	}, nil
 }
 
 // Theme defines the theme for the TUI and CLI help docs.
@@ -51,23 +196,29 @@ type PaletteColor struct {
 }
 
 // LipGloss converts the color to a lipgloss.Color.
-func (c PaletteColor) LipGloss() lipgloss.Color {
+func (c *PaletteColor) LipGloss() lipgloss.Color {
+	if c == nil {
+		return lipgloss.Color("")
+	}
 	return lipgloss.Color(c.raw)
 }
 
 // RGBA exposes an image/color compliant representation of the color.
-func (c PaletteColor) RGBA() color.RGBA {
+func (c *PaletteColor) RGBA() color.RGBA {
+	if c == nil {
+		return color.RGBA{}
+	}
 	return c.rgba
 }
 
-// Default returns the default theme.
+// Default returns the default theme optimised for dark backgrounds.
 func Default() Theme {
-	return MustFromConfig(DefaultConfig())
+	return MustFromConfig(DefaultConfig(), true)
 }
 
 // MustFromConfig creates a Theme from a Config and panics if parsing fails.
-func MustFromConfig(cfg Config) Theme {
-	t, err := FromConfig(cfg)
+func MustFromConfig(cfg Config, hasDarkBackground bool) Theme {
+	t, err := FromConfig(cfg, hasDarkBackground)
 	if err != nil {
 		panic(fmt.Sprintf("invalid theme configuration: %v", err))
 	}
@@ -76,40 +227,15 @@ func MustFromConfig(cfg Config) Theme {
 }
 
 // FromConfig converts a Config into a ready-to-use Theme.
-func FromConfig(cfg Config) (Theme, error) {
-	text, err := parsePaletteColor(cfg.Text)
+func FromConfig(cfg Config, hasDarkBackground bool) (Theme, error) {
+	cfg = cfg.withDefaults()
+
+	palette, err := cfg.paletteForMode(hasDarkBackground)
 	if err != nil {
-		return Theme{}, fmt.Errorf("parse text colour: %w", err)
+		return Theme{}, err
 	}
 
-	muted, err := parsePaletteColor(cfg.Muted)
-	if err != nil {
-		return Theme{}, fmt.Errorf("parse muted colour: %w", err)
-	}
-
-	highlight, err := parsePaletteColor(cfg.Highlight)
-	if err != nil {
-		return Theme{}, fmt.Errorf("parse highlight colour: %w", err)
-	}
-
-	success, err := parsePaletteColor(cfg.Success)
-	if err != nil {
-		return Theme{}, fmt.Errorf("parse success colour: %w", err)
-	}
-
-	worry, err := parsePaletteColor(cfg.Worry)
-	if err != nil {
-		return Theme{}, fmt.Errorf("parse worry colour: %w", err)
-	}
-
-	return Theme{
-		Text:       text,
-		Muted:      muted,
-		Highlight:  highlight,
-		Success:    success,
-		Worry:      worry,
-		CursorChar: "❯",
-	}, nil
+	return palette.toTheme()
 }
 
 func parsePaletteColor(input string) (PaletteColor, error) {

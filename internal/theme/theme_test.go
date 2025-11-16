@@ -23,15 +23,47 @@ func TestParsePaletteColorHex(t *testing.T) {
 
 func TestFromConfigInvalid(t *testing.T) {
 	cfg := Config{
-		Text:      "bogus",
-		Muted:     "#333",
-		Highlight: "#58C5C7",
-		Success:   "#99CC00",
-		Worry:     "#ff7676",
+		Mode: ModeDark,
+		Dark: PaletteConfig{
+			Text:      "bogus",
+			Muted:     "#333333",
+			Highlight: "#58C5C7",
+			Success:   "#99CC00",
+			Worry:     "#FF7676",
+		},
 	}
 
-	if _, err := FromConfig(cfg); err == nil {
+	if _, err := FromConfig(cfg, true); err == nil {
 		t.Fatal("expected FromConfig to error for invalid colour")
+	}
+}
+
+func TestFromConfigAutoUsesLightPalette(t *testing.T) {
+	cfg := Config{
+		Mode: ModeAuto,
+		Dark: PaletteConfig{
+			Text:      "#010101",
+			Muted:     "#020202",
+			Highlight: "#030303",
+			Success:   "#040404",
+			Worry:     "#050505",
+		},
+		Light: PaletteConfig{
+			Text:      "#A0A0A0",
+			Muted:     "#A1A1A1",
+			Highlight: "#A2A2A2",
+			Success:   "#A3A3A3",
+			Worry:     "#A4A4A4",
+		},
+	}
+
+	th, err := FromConfig(cfg, false)
+	if err != nil {
+		t.Fatalf("FromConfig() error = %v", err)
+	}
+
+	if got := th.Text.LipGloss(); got != "#A0A0A0" {
+		t.Fatalf("expected light palette text #A0A0A0, got %s", got)
 	}
 }
 
