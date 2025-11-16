@@ -6,8 +6,6 @@ import (
 )
 
 func TestParsePaletteColorHex(t *testing.T) {
-	t.Helper()
-
 	c, err := parsePaletteColor("#abcdef")
 	if err != nil {
 		t.Fatalf("parsePaletteColor returned error: %v", err)
