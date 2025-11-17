@@ -404,30 +404,35 @@ func (m *Model) renderList() string {
 
 // renderHelp renders the help text.
 func (m *Model) renderHelp() string {
-	var helpItems []string
+		helpStyle := m.theme.HelpStyle()
+		mutedSeparator := helpStyle.Render(m.icons.HelpSeparator)
+		mutedSuccess := m.theme.SuccessStyle().Faint(true)
+		mutedWorry := m.theme.WorryStyle().Faint(true)
 
-	helpItems = append(helpItems, m.formatHelpEntry(m.icons.Add, "A to add"))
+		var helpItems []string
+		helpItems = append(helpItems, helpStyle.Render(m.formatHelpEntry(m.icons.Add, "A to add")))
 
 	l := m.getCurrentList()
 	if l != nil && len(l.Todos) > 0 {
-		helpItems = append(helpItems, m.formatHelpEntry(m.icons.Edit, "E to edit"))
-		helpItems = append(helpItems, m.formatHelpEntry(m.icons.Select, "Enter to select"))
+		helpItems = append(helpItems, helpStyle.Render(m.formatHelpEntry(m.icons.Edit, "E to edit")))
+		helpItems = append(helpItems, helpStyle.Render(m.formatHelpEntry(m.icons.Select, "Enter to select")))
 	}
 
-	if m.hasAnyTodos() {
-		helpItems = append(helpItems, m.formatHelpEntry(m.icons.Navigate, "Tab/Arrow keys to navigate"))
-		helpItems = append(helpItems, m.formatHelpEntry(m.icons.Submit, "Ctrl+S to submit"))
-	}
+		if m.hasAnyTodos() {
+			helpItems = append(helpItems, helpStyle.Render(m.formatHelpEntry(m.icons.Navigate, "Tab/Arrow keys to navigate")))
+			helpItems = append(helpItems, mutedSuccess.Render(m.formatHelpEntry(m.icons.Submit, "Ctrl+S to submit")))
+		}
 
-	helpItems = append(helpItems, m.formatHelpEntry(m.icons.Cancel, "Esc to cancel"))
+		helpItems = append(helpItems, mutedWorry.Render(m.formatHelpEntry(m.icons.Cancel, "Esc to cancel")))
 
-	return m.theme.HelpStyle().Render(strings.Join(helpItems, m.icons.HelpSeparator))
+		return strings.Join(helpItems, mutedSeparator)
 }
 
 func (m *Model) formatHelpEntry(icon, text string) string {
 	if m.icons.ShowHelpIcons {
 		return fmt.Sprintf("%s  %s", icon, text)
 	}
+
 	return text
 }
 
